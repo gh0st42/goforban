@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"goforban/forban"
+	"github.com/gh0st42/goforban/forban"
 )
 
 func schedule(what func(), delay time.Duration) chan bool {
