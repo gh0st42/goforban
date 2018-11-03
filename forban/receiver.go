@@ -139,6 +139,8 @@ func fetchAndAdd(addr string, filename string) {
 	b64fname := base64.StdEncoding.EncodeToString([]byte(filename))
 	fileurl := "http://" + addr + ":12555/s/?g=" + b64fname + "&f=b64e"
 
+	log.Debug("NET Fetching ", fileurl)
+
 	resp, err := http.Get(fileurl)
 	if err != nil {
 		log.Error(err)
@@ -148,13 +150,13 @@ func fetchAndAdd(addr string, filename string) {
 		// Create the file
 		out, err := os.Create(FileBasePath + "/" + filename)
 		if err != nil {
-			log.Error(err)
+			log.Error("NET", err)
 		}
 		defer out.Close()
 		// Writer the body to file
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
-			log.Error(err)
+			log.Error("NET", err)
 		}
 		UpdateFileIndex()
 	} else {

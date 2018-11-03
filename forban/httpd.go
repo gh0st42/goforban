@@ -33,20 +33,20 @@ func handleServe(w http.ResponseWriter, r *http.Request) {
 		_, justfile := filepath.Split(localPath)
 		w.Header().Set("Content-Disposition", "True; filename="+justfile)
 		http.ServeFile(w, r, localPath)
-		log.Info("HTTPD Serving " + localPath)
+		log.Info("HTTPD Serving "+localPath+" to ", r.RemoteAddr)
 	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	localPath := FileBasePath + "/" + r.URL.Path[1:]
-	log.Info("HTTPD Access to " + r.URL.Path[1:] + " " + localPath)
+	log.Info("HTTPD Access to "+r.URL.Path[1:]+" "+localPath+" from ", r.RemoteAddr)
 	//fmt.Fprintf(w, getindexhtml())
 
 	if r.URL.Path[1:] == "index.html" || r.URL.Path[1:] == "" {
 		fmt.Fprintf(w, getindexhtml())
 	} else {
 		if _, err := os.Stat(localPath); err == nil {
-			log.Debug("HTTPD Delivering " + localPath)
+			log.Debug("HTTPD Delivering "+localPath+" to ", r.RemoteAddr)
 			_, justfile := filepath.Split(localPath)
 			//w.Header().Set("Content-Disposition", "True; filename=index")
 			w.Header().Set("Content-Disposition", "True; filename="+justfile)
@@ -55,14 +55,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			//fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintf(w, "404")
-			log.Warn("HTTPD 404 - " + r.URL.Path[1:])
+			log.Warn("HTTPD 404 - "+r.URL.Path[1:], r.RemoteAddr)
 		}
 	}
 }
 
 // not really needed any more
 func peerHandler(w http.ResponseWriter, r *http.Request) {
-	log.Debug("HTTPD peers requested")
+	log.Debug("HTTPD peers requested by ", r.RemoteAddr)
 	fmt.Fprintf(w, "uuid                              \t name           \t hmac                 \t first seen \t last seen\n")
 	for key, value := range Neighborhood {
 		fmt.Fprintf(w, "%s \t %s \t %s \t %s \t %s\n",
