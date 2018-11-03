@@ -2,8 +2,9 @@ package forban
 
 import (
 	"bytes"
-	"log"
 	"net"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Announce send announce packet to broadcast address
@@ -25,6 +26,7 @@ func Announce() {
 			log.Fatal(err)
 		}
 
+		log.Debug("Sending IPv4 announcement")
 		if _, err := ServerConn.WriteTo(buffer.Bytes(), dst); err != nil {
 			log.Fatal(err)
 		}
@@ -38,6 +40,7 @@ func Announce() {
 				log.Fatal(err)
 			}
 
+			log.Debug("Sending IPv6 announcement")
 			if _, err := ServerConn.WriteTo(buffer.Bytes(), dst6); err != nil {
 				log.Fatal(err)
 			}

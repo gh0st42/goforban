@@ -2,7 +2,6 @@ package forban
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ListenerUDP start listening for incoming forban announce packets
@@ -33,7 +34,7 @@ func ListenerUDP(port int) chan bool {
 			parsePkt(buf, n, addr)
 
 			if err != nil {
-				fmt.Println("Error: ", err)
+				log.Error("Error: ", err)
 			}
 		}
 	}()
@@ -136,24 +137,24 @@ func fetchAndAdd(addr string, filename string) {
 
 	resp, err := http.Get(fileurl)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	if resp.StatusCode == 200 {
 		os.MkdirAll(path.Dir(FileBasePath+"/"+filename), 0777)
 		// Create the file
 		out, err := os.Create(FileBasePath + "/" + filename)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		defer out.Close()
 		// Writer the body to file
 		_, err = io.Copy(out, resp.Body)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		UpdateFileIndex()
 	} else {
-		println(resp.StatusCode)
+		log.Debug(resp.StatusCode)
 	}
 
 }

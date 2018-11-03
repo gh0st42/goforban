@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/gh0st42/goforban/forban"
 )
 
@@ -38,10 +40,10 @@ func RunServer() {
 
 	forban.UpdateFileIndex()
 
-	println("Starting ", forban.MyName)
-	fmt.Printf("UUIDv4: %s\n", forban.MyUuid)
+	log.Info("Starting ", forban.MyName)
+	log.Info("UUIDv4: ", forban.MyUuid)
 
-	println(forban.GetIndexHmac())
+	log.Info("Index HMAC: ", forban.GetIndexHmac())
 
 	stop := schedule(forban.Announce, 5000*time.Millisecond)
 
@@ -59,6 +61,8 @@ func Help() {
 	os.Exit(1)
 }
 func main() {
+	log.SetLevel(log.DebugLevel)
+
 	helpCommand := flag.NewFlagSet("help", flag.ExitOnError)
 	serveCommand := flag.NewFlagSet("serve", flag.ExitOnError)
 

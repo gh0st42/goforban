@@ -4,17 +4,15 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // CheckError Generic error checking, exit in case of error
 func CheckError(err error) {
 	if err != nil {
-		fmt.Println("Error: ", err)
-		os.Exit(0)
+		log.Fatal("Error: ", err)
 	}
 }
 
