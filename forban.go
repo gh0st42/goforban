@@ -3,7 +3,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gh0st42/goforban/forban"
@@ -26,7 +28,7 @@ func schedule(what func(), delay time.Duration) chan bool {
 	return stop
 }
 
-func main() {
+func RunServer() {
 	forban.InitForban()
 	//forban.Interfaces = []string{"en1"}
 	//forban.Interfaces = []string{"wlan0"}
@@ -45,4 +47,39 @@ func main() {
 
 	forban.ServeHttpd()
 	stop <- true
+}
+
+func Help() {
+	fmt.Println("goforban commands")
+	fmt.Println("=========================\n")
+	fmt.Printf(" USAGE: %v <command> [flags]\n", os.Args[0])
+	fmt.Println("List of commands:")
+	fmt.Println("  help        - print this help")
+	fmt.Println("  serve       - start forban daemon in foreground")
+	os.Exit(1)
+}
+func main() {
+	helpCommand := flag.NewFlagSet("help", flag.ExitOnError)
+	serveCommand := flag.NewFlagSet("serve", flag.ExitOnError)
+
+	if len(os.Args) < 2 {
+		Help()
+	}
+
+	switch os.Args[1] {
+	case "help":
+		helpCommand.Parse(os.Args[2:])
+	case "serve":
+		serveCommand.Parse(os.Args[2:])
+	default:
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	if helpCommand.Parsed() {
+		Help()
+	}
+	if serveCommand.Parsed() {
+		RunServer()
+	}
 }
