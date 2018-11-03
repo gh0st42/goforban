@@ -31,10 +31,11 @@ func ListenerUDP(port int) chan bool {
 		buf := make([]byte, 1024)
 		for {
 			n, addr, err := ServerConn.ReadFromUDP(buf)
+			log.Debug("NET Received announcement from ", addr)
 			parsePkt(buf, n, addr)
 
 			if err != nil {
-				log.Error("Error: ", err)
+				log.Error("NET Error: ", err)
 			}
 		}
 	}()
@@ -63,6 +64,7 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 
 			if entry.node.uuid == "" {
 				//println("new node")
+				log.Info("NET New node discovered: ", announceNode)
 				entry.firstSeen = time.Now()
 			} else {
 				//println("updated node")
@@ -79,10 +81,12 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 				//println("files missing")
 				//fmt.Println(entry.files)
 				//fmt.Println(MyFiles)
+				log.Debug("NET HMAC mismatch: ", currentHmac, entry.node.hmac)
 				opportunisticWorker(entry)
 			}
 
 			if len(entry.files) == 0 {
+				log.Debug("NET Unknown file count for node ", entry.node.name, ", requesting index")
 				opportunisticWorker(entry)
 			}
 
@@ -154,7 +158,7 @@ func fetchAndAdd(addr string, filename string) {
 		}
 		UpdateFileIndex()
 	} else {
-		log.Debug(resp.StatusCode)
+		log.Debug("NET", resp.StatusCode)
 	}
 
 }

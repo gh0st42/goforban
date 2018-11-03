@@ -23,12 +23,12 @@ func Announce() {
 	if DisableIPv4 == false {
 		dst, err := net.ResolveUDPAddr("udp", "255.255.255.255:12555")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("NET", err)
 		}
 
-		log.Debug("Sending IPv4 announcement")
+		log.Debug("NET Sending IPv4 announcement")
 		if _, err := ServerConn.WriteTo(buffer.Bytes(), dst); err != nil {
-			log.Fatal(err)
+			log.Fatal("NET", err)
 		}
 	}
 
@@ -37,12 +37,12 @@ func Announce() {
 		for _, iface := range Interfaces {
 			dst6, err := net.ResolveUDPAddr("udp", "[ff02::1%"+iface+"]:12555")
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("NET", err)
 			}
 
-			log.Debug("Sending IPv6 announcement")
+			log.Debug("NET Sending IPv6 announcement")
 			if _, err := ServerConn.WriteTo(buffer.Bytes(), dst6); err != nil {
-				log.Fatal(err)
+				log.Fatal("NET", err)
 			}
 		}
 	}
