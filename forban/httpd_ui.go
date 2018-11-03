@@ -39,12 +39,12 @@ func getindexhtml() string {
 		//	time.Since(value.firstSeen), time.Since(value.node.lastSeen))
 
 		if value.node.ipv4 != "" {
-			html += `<td><a href="http://` + value.node.ipv4 + `:12555/">v4</a></td> `
+			html += `<td><a href="http://` + value.node.ipv4 + `:12555/">v4</a><a href="http://` + value.node.ipv4 + `:12555/bundles/">/bundles</a></td> `
 		} else {
 			html += `<td></td> `
 		}
 		if value.node.ipv6 != "" {
-			html += `<td><a href="http://` + value.node.ipv4 + `:12555/">v4</a></td> `
+			html += `<td><a href="http://` + value.node.ipv6 + `:12555/">v6</a><a href="http://` + value.node.ipv6 + `:12555/bundles/">/bundles</a></td> `
 		} else {
 			html += `<td></td> `
 		}

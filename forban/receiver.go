@@ -104,35 +104,38 @@ func opportunisticWorker(entry ForbanNodeEntry) {
 	indexurl := "http://" + addr + ":12555/s/?g=forban/index"
 
 	resp, _ := http.Get(indexurl)
-	//println(resp, err)
-	body, _ := ioutil.ReadAll(resp.Body)
-	forbanindex := string(body)
-	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		forbanindex := string(body)
+		defer resp.Body.Close()
 
-	indexfiles := strings.Split(forbanindex, "\n")
+		indexfiles := strings.Split(forbanindex, "\n")
 
-	// stage 2: fetch missing files
-	var filelist = []FileEntry{}
+		// stage 2: fetch missing files
+		var filelist = []FileEntry{}
 
-	var count int64
-	count = 0
-	for _, i := range indexfiles {
-		if strings.HasPrefix(i, "forban/index") != true && len(i) > 0 {
-			fields := strings.Split(i, ",")
-			fsize, _ := strconv.ParseInt(fields[1], 10, 64)
-			var curFile = FileEntry{fields[0], "", fsize}
-			count += fsize
-			//fmt.Println(curFile)
-			//fmt.Println(fields)
-			filelist = append(filelist, curFile)
-			if !stringInSlice(fields[0], MyFiles) {
-				fetchAndAdd(addr, fields[0])
+		var count int64
+		count = 0
+		for _, i := range indexfiles {
+			if strings.HasPrefix(i, "forban/index") != true && len(i) > 0 {
+				fields := strings.Split(i, ",")
+				fsize, _ := strconv.ParseInt(fields[1], 10, 64)
+				var curFile = FileEntry{fields[0], "", fsize}
+				count += fsize
+				//fmt.Println(curFile)
+				//fmt.Println(fields)
+				filelist = append(filelist, curFile)
+				if !stringInSlice(fields[0], MyFiles) {
+					fetchAndAdd(addr, fields[0])
+				}
 			}
 		}
+		entry.totalStore = count
+		entry.files = filelist
+		Neighborhood[entry.node.uuid] = entry
+	} else {
+		log.Error("NET ", resp.StatusCode, " ", indexurl)
 	}
-	entry.totalStore = count
-	entry.files = filelist
-	Neighborhood[entry.node.uuid] = entry
 }
 
 func fetchAndAdd(addr string, filename string) {
@@ -160,7 +163,7 @@ func fetchAndAdd(addr string, filename string) {
 		}
 		UpdateFileIndex()
 	} else {
-		log.Debug("NET", resp.StatusCode)
+		log.Debug("NET ", resp.StatusCode)
 	}
 
 }

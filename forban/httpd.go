@@ -1,8 +1,12 @@
 package forban
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,8 +17,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func handleServe(w http.ResponseWriter, r *http.Request) {
+func requestFilter(remoteaddr string, filename string) bool {
 
+	return true
+}
+
+func uploadFilter(remoteaddr string, hash string, tempfile string) bool {
+	return true
+}
+
+func handleServe(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(r.Form)
 	//fmt.Println(r.RequestURI)
 	//fmt.Println(r.FormValue("g"))
@@ -29,11 +41,17 @@ func handleServe(w http.ResponseWriter, r *http.Request) {
 		} else {
 			filename = r.FormValue("g")
 		}
-		localPath := FileBasePath + "/" + filename
-		_, justfile := filepath.Split(localPath)
-		w.Header().Set("Content-Disposition", "True; filename="+justfile)
-		http.ServeFile(w, r, localPath)
-		log.Info("HTTPD Serving "+localPath+" to ", r.RemoteAddr)
+		if requestFilter(r.RemoteAddr, filename) {
+			localPath := FileBasePath + "/" + filename
+			_, justfile := filepath.Split(localPath)
+			w.Header().Set("Content-Disposition", "True; filename="+justfile)
+			http.ServeFile(w, r, localPath)
+			log.Info("HTTPD Serving "+localPath+" to ", r.RemoteAddr)
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprintf(w, "403")
+			log.Warn("HTTPD 403 - "+r.URL.Path[1:], r.RemoteAddr)
+		}
 	}
 }
 
@@ -71,14 +89,45 @@ func peerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Upload files to forban store
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	file, err := ioutil.TempFile("", "./result")
+	if err != nil {
+		log.Fatal("NET ", err)
+	}
+	defer os.Remove(file.Name()) // clean up
+
+	log.Info("NET Upload ", r)
+	fmt.Fprintf(w, "%v", r)
+	n, err := io.Copy(file, r.Body)
+	if err != nil {
+		log.Fatal("NET ", err)
+	}
+
+	hasher := sha256.New()
+	b, err := ioutil.ReadFile(file.Name())
+	CheckError(err)
+	hasher.Write(b)
+	shasum := hex.EncodeToString(hasher.Sum(nil))
+	log.Debug("NET Upload hash: ", shasum)
+	if uploadFilter(r.RemoteAddr, shasum, file.Name()) {
+		err = ioutil.WriteFile(FileBasePath+"/"+shasum, b, 0644)
+		CheckError(err)
+		log.Info("HTTPD Added ", shasum, " with ", len(b), " bytes")
+		UpdateFileIndex()
+	}
+	w.Write([]byte(fmt.Sprintf("%d bytes are recieved.\n", n)))
+}
+
 // ServeHttpd starts serving forban content
 func ServeHttpd() {
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(static.HTTP)))
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/s/", handleServe)
-
 	http.HandleFunc("/peers", peerHandler) // deprecated
+	http.HandleFunc("/upload", uploadHandler)
+	http.Handle("/bundles/", http.StripPrefix("/bundles/", http.FileServer(http.Dir(FileBasePath))))
 	//http.Handle("/assets", static.Handler)
 	http.ListenAndServe(":12555", nil)
 }
