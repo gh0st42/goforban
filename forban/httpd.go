@@ -98,7 +98,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(file.Name()) // clean up
 
 	log.Info("NET Upload ", r)
-	fmt.Fprintf(w, "%v", r)
+	//fmt.Fprintf(w, "%v", r)
 	n, err := io.Copy(file, r.Body)
 	if err != nil {
 		log.Fatal("NET ", err)
@@ -127,6 +127,7 @@ func ServeHttpd() {
 	http.HandleFunc("/s/", handleServe)
 	http.HandleFunc("/peers", peerHandler) // deprecated
 	http.HandleFunc("/upload", uploadHandler)
+
 	http.Handle("/bundles/", http.StripPrefix("/bundles/", http.FileServer(http.Dir(FileBasePath))))
 	//http.Handle("/assets", static.Handler)
 	http.ListenAndServe(":12555", nil)

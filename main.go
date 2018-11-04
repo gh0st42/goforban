@@ -72,7 +72,7 @@ func ShareFile(filename string) {
 	}
 	defer res.Body.Close()
 	message, _ := ioutil.ReadAll(res.Body)
-	fmt.Printf(string(message))
+	println(string(message))
 
 	println("DONE")
 }
@@ -119,7 +119,8 @@ func main() {
 	if shareCommand.Parsed() {
 		if len(os.Args) > 2 {
 			ShareFile(os.Args[2])
+		} else {
+			Help()
 		}
 	}
-	Help()
 }
