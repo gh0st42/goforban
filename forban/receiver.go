@@ -51,6 +51,8 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 			//			println("receiver announce: " + recvstr)
 
 			var ipv4, ipv6 string
+			newNode := false
+
 			if sender.IP.To4() != nil {
 				ipv4 = sender.IP.String()
 				ipv6 = ""
@@ -66,6 +68,7 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 				//println("new node")
 				log.Info("NET New node discovered: ", announceNode)
 				entry.firstSeen = time.Now()
+				newNode = true
 			} else {
 				//println("updated node")
 			}
@@ -85,7 +88,7 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 				opportunisticWorker(entry)
 			}
 
-			if len(entry.files) == 0 {
+			if len(entry.files) == 0 && newNode {
 				log.Debug("NET Unknown file count for node ", entry.node.name, ", requesting index")
 				opportunisticWorker(entry)
 			}
