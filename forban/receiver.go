@@ -103,7 +103,12 @@ func opportunisticWorker(entry ForbanNodeEntry) {
 	//println(addr)
 	indexurl := "http://" + addr + ":12555/s/?g=forban/index"
 
-	resp, _ := http.Get(indexurl)
+	resp, err := http.Get(indexurl)
+	if err != nil {
+		log.Error("Error fetching index from ", addr, " : ", err)
+
+		return
+	}
 	if resp.StatusCode == 200 {
 		body, _ := ioutil.ReadAll(resp.Body)
 		forbanindex := string(body)
