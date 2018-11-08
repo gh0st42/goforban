@@ -89,6 +89,24 @@ func peerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// local daemon control
+func ctrlHandler(w http.ResponseWriter, r *http.Request) {
+	log.Info("HTTPD ctrl request to "+r.URL.Path[1:]+" from ", r.RemoteAddr)
+	if !strings.HasPrefix(r.RemoteAddr, "[::1]:") && !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprintf(w, "Access Forbidden")
+		log.Warn("HTTPD Illegal control access "+r.URL.Path[1:], " from ", r.RemoteAddr)
+	}
+	if strings.HasSuffix(r.URL.Path, "/stop") {
+		log.Info("HTTPD Server shutdown requested")
+		w.WriteHeader(http.StatusAccepted)
+		go func() {
+			time.Sleep(1 * time.Second)
+			os.Exit(0)
+		}()
+	}
+}
+
 // Upload files to forban store
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	file, err := ioutil.TempFile("", "./result")
@@ -123,6 +141,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 func ServeHttpd() {
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(static.HTTP)))
+	http.HandleFunc("/ctrl/", ctrlHandler)
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/s/", handleServe)
 	http.HandleFunc("/peers", peerHandler) // deprecated

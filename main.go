@@ -54,6 +54,13 @@ func RunServer() {
 	stop <- true
 }
 
+func Stop() {
+	res, err := http.Get("http://127.0.0.1:12555/ctrl/stop")
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+}
 func ShareFile(filename string) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		fmt.Println("File does not exist")
@@ -83,6 +90,7 @@ func Help() {
 	fmt.Println("List of commands:")
 	fmt.Println("  help               - print this help")
 	fmt.Println("  serve [background] - start forban daemon in foreground")
+	fmt.Println("  stop               - stops forban daemon on localhost")
 	fmt.Println("  share <file>       - share bundle file")
 	os.Exit(1)
 }
@@ -92,6 +100,7 @@ func main() {
 	helpCommand := flag.NewFlagSet("help", flag.ExitOnError)
 	serveCommand := flag.NewFlagSet("serve", flag.ExitOnError)
 	shareCommand := flag.NewFlagSet("share", flag.ExitOnError)
+	stopCommand := flag.NewFlagSet("stop", flag.ExitOnError)
 
 	if len(os.Args) < 2 {
 		Help()
@@ -104,6 +113,8 @@ func main() {
 		serveCommand.Parse(os.Args[2:])
 	case "share":
 		shareCommand.Parse(os.Args[2:])
+	case "stop":
+		stopCommand.Parse(os.Args[2:])
 	default:
 		Help()
 		flag.PrintDefaults()
@@ -112,6 +123,9 @@ func main() {
 
 	if helpCommand.Parsed() {
 		Help()
+	}
+	if stopCommand.Parsed() {
+		Stop()
 	}
 	if serveCommand.Parsed() {
 		if len(os.Args) == 3 && os.Args[2] == "background" {
