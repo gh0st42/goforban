@@ -10,9 +10,9 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/gh0st42/goforban/forban"
+	daemon "github.com/sevlyar/go-daemon"
+	log "github.com/sirupsen/logrus"
 )
 
 func schedule(what func(), delay time.Duration) chan bool {
@@ -81,9 +81,9 @@ func Help() {
 	fmt.Println("=========================\n")
 	fmt.Printf(" USAGE: %v <command> [flags]\n", os.Args[0])
 	fmt.Println("List of commands:")
-	fmt.Println("  help         - print this help")
-	fmt.Println("  serve        - start forban daemon in foreground")
-	fmt.Println("  share <file> - share bundle file")
+	fmt.Println("  help               - print this help")
+	fmt.Println("  serve [background] - start forban daemon in foreground")
+	fmt.Println("  share <file>       - share bundle file")
 	os.Exit(1)
 }
 func main() {
@@ -114,6 +114,27 @@ func main() {
 		Help()
 	}
 	if serveCommand.Parsed() {
+		if len(os.Args) == 3 && os.Args[2] == "background" {
+			cntxt := &daemon.Context{
+				PidFileName: "pid",
+				PidFilePerm: 0644,
+				LogFileName: "log",
+				LogFilePerm: 0640,
+				WorkDir:     "./",
+				Umask:       027,
+				Args:        os.Args,
+			}
+
+			d, err := cntxt.Reborn()
+			if err != nil {
+				log.Fatal("Unable to run: ", err)
+			}
+			if d != nil {
+				return
+			}
+			defer cntxt.Release()
+
+		}
 		RunServer()
 	}
 	if shareCommand.Parsed() {
