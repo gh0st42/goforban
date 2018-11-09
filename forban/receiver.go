@@ -84,8 +84,18 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 				//println("files missing")
 				//fmt.Println(entry.files)
 				//fmt.Println(MyFiles)
-				log.Debug("NET HMAC mismatch: ", currentHmac, entry.node.hmac)
-				opportunisticWorker(entry)
+				count, ok := HmacIgnoreList[entry.node.hmac]
+				if ok {
+					log.Debug("NET Known HMAC mismatch, ignoring")
+					HmacIgnoreList[entry.node.hmac] -= 1
+					if count == 1 {
+						delete(HmacIgnoreList, entry.node.hmac)
+					}
+				} else {
+					HmacIgnoreList[entry.node.hmac] = IgnoreCount
+					log.Debug("NET HMAC mismatch: ", currentHmac, " ", entry.node.hmac)
+					opportunisticWorker(entry)
+				}
 			}
 
 			if len(entry.files) == 0 && newNode {

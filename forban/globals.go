@@ -9,10 +9,13 @@ var MyPsk string
 var MyFiles = []string{}
 var DisableIPv6 = true
 var DisableIPv4 = false
+var IgnoreCount = 3
 
 var Port = 12555
 
 var Neighborhood map[string]ForbanNodeEntry
+
+var HmacIgnoreList map[string]int
 
 // ServerConn server listening socket, also used for sending
 var ServerConn *net.UDPConn
