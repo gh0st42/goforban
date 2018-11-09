@@ -171,6 +171,8 @@ func fetchAndAdd(addr string, filename string) {
 	resp, err := http.Get(fileurl)
 	if err != nil {
 		log.Error(err)
+		delete(DownloadQueue, addr+filename)
+		return
 	}
 	defer resp.Body.Close()
 	log.Debug("NET GET ", resp)
@@ -185,12 +187,16 @@ func fetchAndAdd(addr string, filename string) {
 		n, err := io.Copy(file, resp.Body)
 		if err != nil {
 			log.Error("NET ", err)
+			delete(DownloadQueue, addr+filename)
+			return
 		}
 		log.Debug("NET Received ", n, " bytes for file ", filename)
 
 		err = os.Rename(file.Name(), FileBasePath+"/"+filename)
 		if err != nil {
 			log.Error("NET ", err)
+			delete(DownloadQueue, addr+filename)
+			return
 		}
 		UpdateFileIndex()
 	} else {
