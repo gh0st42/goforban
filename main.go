@@ -46,7 +46,7 @@ func RunServer() {
 
 	log.Info("Index HMAC: ", forban.GetIndexHmac())
 
-	stop := schedule(forban.Announce, 15000*time.Millisecond)
+	stop := schedule(forban.Announce, 5000*time.Millisecond)
 
 	forban.ServeHttpd()
 	stop <- true

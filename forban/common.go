@@ -33,6 +33,7 @@ func InitForban() {
 	MyPsk = "forban"
 	Neighborhood = make(map[string]ForbanNodeEntry)
 	HmacIgnoreList = make(map[string]int)
+	DownloadQueue = make(map[string]bool)
 
 	os.MkdirAll(FileBasePath+"/forban", 0755)
 

@@ -87,7 +87,7 @@ func parsePkt(pkt []byte, pktSize int, sender *net.UDPAddr) {
 				count, ok := HmacIgnoreList[entry.node.hmac]
 				if ok {
 					log.Debug("NET Known HMAC mismatch, ignoring")
-					HmacIgnoreList[entry.node.hmac] -= 1
+					HmacIgnoreList[entry.node.hmac]--
 					if count == 1 {
 						delete(HmacIgnoreList, entry.node.hmac)
 					}
@@ -144,7 +144,13 @@ func opportunisticWorker(entry ForbanNodeEntry) {
 				//fmt.Println(fields)
 				filelist = append(filelist, curFile)
 				if !stringInSlice(fields[0], MyFiles) {
-					fetchAndAdd(addr, fields[0])
+					_, ok := DownloadQueue[addr+fields[0]]
+					if ok == false {
+						go fetchAndAdd(addr, fields[0])
+						DownloadQueue[addr+fields[0]] = true
+					} else {
+						log.Debug("NET Download still in progress")
+					}
 				}
 			}
 		}
@@ -166,22 +172,30 @@ func fetchAndAdd(addr string, filename string) {
 	if err != nil {
 		log.Error(err)
 	}
-	if resp.StatusCode == 200 {
+	defer resp.Body.Close()
+	log.Debug("NET GET ", resp)
+	if resp.StatusCode == http.StatusOK {
 		os.MkdirAll(path.Dir(FileBasePath+"/"+filename), 0777)
-		// Create the file
-		out, err := os.Create(FileBasePath + "/" + filename)
+		file, err := ioutil.TempFile("", "./result")
 		if err != nil {
-			log.Error("NET", err)
+			log.Fatal("HTTPD ", err)
 		}
-		defer out.Close()
-		// Writer the body to file
-		_, err = io.Copy(out, resp.Body)
+		defer os.Remove(file.Name()) // clean up
+
+		n, err := io.Copy(file, resp.Body)
 		if err != nil {
-			log.Error("NET", err)
+			log.Error("NET ", err)
+		}
+		log.Debug("NET Received ", n, " bytes for file ", filename)
+
+		err = os.Rename(file.Name(), FileBasePath+"/"+filename)
+		if err != nil {
+			log.Error("NET ", err)
 		}
 		UpdateFileIndex()
 	} else {
 		log.Debug("NET ", resp.StatusCode)
 	}
-
+	delete(DownloadQueue, addr+filename)
+	log.Debug("NET Download removed from queue ", DownloadQueue)
 }

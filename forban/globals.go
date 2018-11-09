@@ -17,6 +17,8 @@ var Neighborhood map[string]ForbanNodeEntry
 
 var HmacIgnoreList map[string]int
 
+var DownloadQueue map[string]bool
+
 // ServerConn server listening socket, also used for sending
 var ServerConn *net.UDPConn
 

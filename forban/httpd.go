@@ -111,15 +111,15 @@ func ctrlHandler(w http.ResponseWriter, r *http.Request) {
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	file, err := ioutil.TempFile("", "./result")
 	if err != nil {
-		log.Fatal("NET ", err)
+		log.Fatal("HTTPD ", err)
 	}
 	defer os.Remove(file.Name()) // clean up
 
-	log.Info("NET Upload ", r)
+	log.Info("HTTPD Upload ", r)
 	//fmt.Fprintf(w, "%v", r)
 	n, err := io.Copy(file, r.Body)
 	if err != nil {
-		log.Fatal("NET ", err)
+		log.Fatal("HTTPD ", err)
 	}
 
 	hasher := sha256.New()
@@ -127,7 +127,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	CheckError(err)
 	hasher.Write(b)
 	shasum := hex.EncodeToString(hasher.Sum(nil))
-	log.Debug("NET Upload hash: ", shasum)
+	log.Debug("HTTPD Upload hash: ", shasum)
 	if uploadFilter(r.RemoteAddr, shasum, file.Name()) {
 		err = ioutil.WriteFile(FileBasePath+"/"+shasum, b, 0644)
 		CheckError(err)
