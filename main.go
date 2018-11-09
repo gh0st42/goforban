@@ -5,8 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
 
@@ -48,41 +46,12 @@ func RunServer() {
 
 	log.Info("Index HMAC: ", forban.GetIndexHmac())
 
-	stop := schedule(forban.Announce, 5000*time.Millisecond)
+	stop := schedule(forban.Announce, 15000*time.Millisecond)
 
 	forban.ServeHttpd()
 	stop <- true
 }
 
-func Stop() {
-	res, err := http.Get("http://127.0.0.1:12555/ctrl/stop")
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-}
-func ShareFile(filename string) {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		fmt.Println("File does not exist")
-	} else {
-		fmt.Println("File exists")
-	}
-	file, err := os.Open(filename)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	res, err := http.Post("http://127.0.0.1:12555/upload", "binary/octet-stream", file)
-	if err != nil {
-		panic(err)
-	}
-	defer res.Body.Close()
-	message, _ := ioutil.ReadAll(res.Body)
-	println(string(message))
-
-	println("DONE")
-}
 func Help() {
 	fmt.Println("goforban commands")
 	fmt.Println("=========================\n")
@@ -125,7 +94,7 @@ func main() {
 		Help()
 	}
 	if stopCommand.Parsed() {
-		Stop()
+		forban.Stop()
 	}
 	if serveCommand.Parsed() {
 		if len(os.Args) == 3 && os.Args[2] == "background" {
@@ -153,7 +122,7 @@ func main() {
 	}
 	if shareCommand.Parsed() {
 		if len(os.Args) > 2 {
-			ShareFile(os.Args[2])
+			forban.ShareFile(os.Args[2])
 		} else {
 			Help()
 		}
