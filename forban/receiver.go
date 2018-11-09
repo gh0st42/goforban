@@ -31,12 +31,12 @@ func ListenerUDP(port int) chan bool {
 		buf := make([]byte, 1024)
 		for {
 			n, addr, err := ServerConn.ReadFromUDP(buf)
-			log.Debug("NET Received announcement from ", addr)
-			parsePkt(buf, n, addr)
-
 			if err != nil {
 				log.Error("NET Error: ", err)
 			}
+
+			log.Debug("NET Received announcement from ", addr)
+			parsePkt(buf, n, addr)
 		}
 	}()
 
