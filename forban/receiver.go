@@ -178,7 +178,7 @@ func fetchAndAdd(addr string, filename string) {
 	log.Debug("NET GET ", resp)
 	if resp.StatusCode == http.StatusOK {
 		os.MkdirAll(path.Dir(FileBasePath+"/"+filename), 0777)
-		file, err := ioutil.TempFile("", "./result")
+		file, err := ioutil.TempFile("", "./forban")
 		if err != nil {
 			log.Fatal("HTTPD ", err)
 		}
