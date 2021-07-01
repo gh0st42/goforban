@@ -178,15 +178,15 @@ func fetchAndAdd(addr string, filename string) {
 	log.Debug("NET GET ", resp)
 	if resp.StatusCode == http.StatusOK {
 		os.MkdirAll(path.Dir(FileBasePath+"/"+filename), 0777)
-		file, err := ioutil.TempFile("", "./forban")
+		file, err := ioutil.TempFile("", "forban")
 		if err != nil {
-			log.Fatal("HTTPD ", err)
+			log.Fatal("HTTPD Error creating temp file: ", err)
 		}
 		defer os.Remove(file.Name()) // clean up
 
 		n, err := io.Copy(file, resp.Body)
 		if err != nil {
-			log.Error("NET ", err)
+			log.Error("NET Error writing response mody to temp file: ", err)
 			delete(DownloadQueue, addr+filename)
 			return
 		}
